@@ -1,7 +1,6 @@
 import { FileReader } from './file-reader.interface.js';
 import { readFileSync } from 'node:fs';
-import { Offer, User } from './../../types/index.js';
-import { OfferFactory } from './factories/offer.factory.js';
+import { Offer, User,UserType,HousingType,CityName,Convenience } from './../../types/index.js';
 
 export class TSVFileReader implements FileReader {
   private rawData = '';
@@ -19,31 +18,79 @@ export class TSVFileReader implements FileReader {
       throw new Error('File was not read');
     }
 
-    return this.rawData
-      .split('\n')
+    return this.rawData.split('\n')
       .filter((row) => row.trim().length > 0)
-      .map((line) => line.trim().split('\t'))
-      .filter((parts) => parts.length === 17)
-      .map((parts) => ({
-        title: parts[0],
-        description: parts[1],
-        publishDate: parts[2],
-        city: parts[3],
-        previewImage: parts[4],
-        images: parts[5],
-        isPremium: parts[6],
-        isFavorite: parts[7],
-        rating: parts[8],
-        housingType: parts[9],
-        rooms: parts[10],
-        guests: parts[11],
-        price: parts[12],
-        conveniences: parts[13],
-        userInfo: parts[14],
-        commentsCount: parts[15],
-        location: parts[16]
-      }))
-      .map((rawOffer) => OfferFactory.create(rawOffer, users))
-      .filter((offer): offer is Offer => offer !== null);
+      .map((line) => {
+        const tokens = line.trim().split('\t');
+
+        const [
+          title,
+          description,
+          publishDate,
+          city,
+          adImage,
+          images,
+          isPremium,
+          isFavorite,
+          rating,
+          housingType,
+          rooms,
+          guests,
+          price,
+          conveniences,
+          userStr,
+          commentsCount,
+          latitude,
+          longitude
+        ] = tokens;
+
+        const [firstname, email, password, typeRaw, avatarPath] = userStr.split(' ');
+
+        const type = typeRaw.toLowerCase() === 'pro'
+          ? UserType.Pro
+          : UserType.Standard;
+
+        let user: User = {
+          firstname,
+          email,
+          password,
+          type,
+          avatarPath
+        };
+
+        const existingUser = users.find((u) => u.email === email);
+        if (existingUser) {
+          user = existingUser;
+        } else {
+          users.push(user);
+        }
+
+        const offer: Offer = {
+          title,
+          description,
+          publishDate: new Date(
+            publishDate.split('.').reverse().join('-')
+          ),
+          city: city as CityName,
+          adImage,
+          images: images.split(' ') as [string, string, string, string, string, string],
+          isPremium: isPremium.toLowerCase() === 'true',
+          isFavorite: isFavorite.toLowerCase() === 'true',
+          rating: parseFloat(rating),
+          housingType: housingType as HousingType,
+          rooms: parseInt(rooms, 10),
+          guests: parseInt(guests, 10),
+          price: parseInt(price, 10),
+          conveniences: conveniences.split(',').map((c) => c.trim()) as Convenience[],
+          user,
+          commentsCount: parseInt(commentsCount, 10),
+          location: {
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude)
+          }
+        };
+
+        return offer;
+      });
   }
 }
