@@ -1,6 +1,7 @@
 import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import { User, UserType } from '../../shared/types/index.js';
+import chalk from 'chalk';
 
 export class ImportCommand implements Command {
   public getName(): string {
@@ -18,7 +19,12 @@ export class ImportCommand implements Command {
 
     try {
       fileReader.read();
-      console.log(fileReader.toArray(this.users));
+      const colors = [chalk.green, chalk.yellow, chalk.blue, chalk.magenta];
+      fileReader.toArray(this.users).forEach((offer, index) => {
+        const color = colors[index % colors.length];
+        console.log(color(JSON.stringify(offer, null, 2)));
+      });
+      console.log(chalk.magenta(fileReader.toArray(this.users).toString));
     } catch (err) {
 
       if (!(err instanceof Error)) {
