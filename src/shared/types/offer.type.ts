@@ -1,4 +1,7 @@
-import {HousingType, CityName, Location, Сonvenience} from './support.types.js';
+import {HousingType} from './housing-type.enum.js';
+import {CityName} from './city-name.enum.js';
+import {Location} from './location.type.js';
+import {Convenience} from './convenience.enum.js';
 import {User} from './user.type.js';
 
 export type Offer = {
@@ -7,7 +10,7 @@ export type Offer = {
   publishDate: Date;
   city: CityName;
   adImage: string;
-  images: [string, string, string, string, string, string]; // exactly 6
+  images: [string, string, string, string, string, string];
   isPremium: boolean;
   isFavorite: boolean;
   rating: number;
@@ -15,7 +18,7 @@ export type Offer = {
   rooms: number;
   guests: number;
   price: number;
-  conveniences: Сonvenience[];
+  conveniences: Convenience[];
   user: User;
   commentsCount: number;
   location: Location;
