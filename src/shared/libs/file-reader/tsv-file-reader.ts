@@ -1,6 +1,6 @@
 import { FileReader } from './file-reader.interface.js';
 import { readFileSync } from 'node:fs';
-import { Offer, User,UserType,HousingType,CityName,Convenience } from './../../types/index.js';
+import { Offer, User, isCityName, isConvenience, isHousingType, isUserType } from './../../types/index.js';
 
 export class TSVFileReader implements FileReader {
   private rawData = '';
@@ -18,43 +18,17 @@ export class TSVFileReader implements FileReader {
       throw new Error('File was not read');
     }
 
-    return this.rawData.split('\n')
+
+    return this.rawData
+      .split('\n')
       .filter((row) => row.trim().length > 0)
-      .map((line) => {
-        const tokens = line.trim().split('\t');
-
-        const [
-          title,
-          description,
-          publishDate,
-          city,
-          adImage,
-          images,
-          isPremium,
-          isFavorite,
-          rating,
-          housingType,
-          rooms,
-          guests,
-          price,
-          conveniences,
-          userStr,
-          commentsCount,
-          latitude,
-          longitude
-        ] = tokens;
-
-        const [firstname, email, password, typeRaw, avatarPath] = userStr.split(' ');
-
-        const type = typeRaw.toLowerCase() === 'pro'
-          ? UserType.Pro
-          : UserType.Standard;
-
+      .map((line) => line.split('\t'))
+      .map(([title, description, publishDate, city, adImage, images, isPremium, isFavorite, rating, housingType, rooms, guests, price, conveniences, firstname, email, avatarPath, password, typeRaw, commentsCount, latitude, longitude]) => {
         let user: User = {
           firstname,
           email,
           password,
-          type,
+          type: isUserType(typeRaw) ?? undefined,
           avatarPath
         };
 
@@ -65,32 +39,30 @@ export class TSVFileReader implements FileReader {
           users.push(user);
         }
 
-        const offer: Offer = {
+        return {
           title,
           description,
-          publishDate: new Date(
-            publishDate.split('.').reverse().join('-')
-          ),
-          city: city as CityName,
+          publishDate: new Date(publishDate.split('.').reverse().join('-')),
+          city: isCityName(city) ?? 'Amsterdam',
           adImage,
           images: images.split(' ') as [string, string, string, string, string, string],
           isPremium: isPremium.toLowerCase() === 'true',
           isFavorite: isFavorite.toLowerCase() === 'true',
           rating: parseFloat(rating),
-          housingType: housingType as HousingType,
+          housingType: isHousingType(housingType) ?? 'apartment',
           rooms: parseInt(rooms, 10),
           guests: parseInt(guests, 10),
           price: parseInt(price, 10),
-          conveniences: conveniences.split(',').map((c) => c.trim()) as Convenience[],
+          conveniences: conveniences
+            .split(',')
+            .map((c) => isConvenience(c.trim()) ?? 'Fridge'),
           user,
-          commentsCount: parseInt(commentsCount, 10),
+          commentsCount: Number.parseInt(commentsCount, 10),
           location: {
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude)
+            latitude: Number.parseFloat(latitude),
+            longitude: Number.parseFloat(longitude)
           }
         };
-
-        return offer;
       });
   }
 }

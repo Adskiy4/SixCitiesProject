@@ -1,6 +1,6 @@
 import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
-import { User, UserType } from '../../shared/types/index.js';
+import { User } from '../../shared/types/index.js';
 import chalk from 'chalk';
 
 export class ImportCommand implements Command {
@@ -9,8 +9,8 @@ export class ImportCommand implements Command {
   }
 
   public users: User[] = [
-    { firstname: 'Ivan', email: 'ivan@mail.com', password: '123456', type: UserType.Pro, avatarPath: 'ivanAva.jpg' },
-    { firstname: 'Dima', email: 'dima@mail.com', password: '123456', type: UserType.Standard, avatarPath: 'dimaAva.jpg' }
+    { firstname: 'Ivan', email: 'ivan@mail.com', password: '123456', type: 'pro', avatarPath: 'ivanAva.jpg' },
+    { firstname: 'Dima', email: 'dima@mail.com', password: '123456', type: 'standard', avatarPath: 'dimaAva.jpg' }
   ];
 
   public async execute(...parameters: string[]): Promise<void> {
