@@ -14,9 +14,16 @@ export class TSVFileReader extends EventEmitter implements FileReader {
       encoding: 'utf-8',
     });
 
+    readStream.on('open', (fd) => {
+      console.log(`Файл открыт, fd = ${fd}`);
+    });
     let remainingData = '';
     let nextLinePosition = -1;
     let importedRowCount = 0;
+
+    readStream.on('error', (err) => {
+      console.error('Ошибка при открытии файла:', err);
+    });
 
     for await (const chunk of readStream) {
       remainingData += chunk.toString();

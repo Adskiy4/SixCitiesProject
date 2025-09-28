@@ -1,6 +1,6 @@
 import { Offer, User, isCityName, isConvenience, isHousingType, isUserType } from '../types/index.js';
 
-export function createOffer(offerData: string, users: User[]): Offer {
+export function createOffer(offerData: string): Offer {
   const [title,
     description,
     publishDate,
@@ -15,29 +15,19 @@ export function createOffer(offerData: string, users: User[]): Offer {
     guests,
     price,
     conveniences,
-    firstname,
-    email,
-    avatarPath,
-    password,
-    typeRaw,
+    userStr,
     commentsCount,
-    latitude,
-    longitude
+    cords
   ] = offerData.replace('\n','').split('\t');
-  let user: User = {
+  const [firstname, email, password, typeRaw, avatarPath] = userStr.split(' ');
+  const user: User = {
     firstname,
     email,
     password,
     type: isUserType(typeRaw) ?? undefined,
     avatarPath
   };
-  const existingUser = users.find((u) => u.email === email);
-  if (existingUser) {
-    user = existingUser;
-  } else {
-    users.push(user);
-  }
-
+  const [latitude, longitude] = cords.split(' ');
   return {
     title,
     description,
