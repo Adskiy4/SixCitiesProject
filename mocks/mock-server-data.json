@@ -31,6 +31,28 @@
       "coca@cola.local",
       "skolko@mojno.local",
       "live@love.local"
+    ],
+    "adImages": [
+      "house.jpg",
+      "garage.jpg",
+      "pentHouse.jpg",
+      "apartments.jpg",
+      "hotel.jpg",
+      "hostel.jpg"
+    ],
+    "avatars": [
+      "user.jpg",
+      "photo.jpg",
+      "awesome-avatar.jpg",
+      "roland.jpg",
+      "smite.jpg",
+      "coffee.jpg"
+    ],
+    "passwords": [
+      "123456",
+      "qwerty",
+      "abcdefghijk",
+      "1234567890"
     ]
   }
 }

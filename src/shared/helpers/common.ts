@@ -15,3 +15,15 @@ export function getRandomItem<T>(items: T[]):T {
 export function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : '';
 }
+
+export function getRandomBoolean():boolean {
+  return Boolean(Math.round(Math.random()));
+}
+
+export function getRandomCordPoint(min: number, max: number, decimals: number): number {
+  const precision = 10 ** decimals;
+  const range = max - min;
+  const randomNumber = Math.random() * range + min;
+
+  return Math.round(randomNumber * precision) / precision;
+}
