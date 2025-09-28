@@ -24,3 +24,5 @@ export const MIN_LAT = -90;
 export const MAX_LON = 180;
 export const MIN_LON = -180;
 export const DECIMALS_CORD = 6;
+
+export const CHUNK_SIZE = 16384;
