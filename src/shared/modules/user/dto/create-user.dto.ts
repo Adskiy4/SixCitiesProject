@@ -5,4 +5,5 @@ export class CreateUserDto {
   public avatarPath: string;
   public firstname: string;
   public type: UserType;
+  public password: string;
 }

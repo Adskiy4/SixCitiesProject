@@ -103,4 +103,4 @@ export class OfferEntity extends defaultClasses.TimeStamps {
 
 }
 
-export const UserModel = getModelForClass(OfferEntity);
+export const OfferModel = getModelForClass(OfferEntity);
