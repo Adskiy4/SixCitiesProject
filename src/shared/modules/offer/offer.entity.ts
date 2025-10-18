@@ -62,9 +62,6 @@ export class OfferEntity extends defaultClasses.TimeStamps {
   @prop({required: true, default: []})
   public conveniences: Convenience[];
 
-  @prop({required: true})
-  public coordinates: Location;
-
 
   @prop({default: 0})
   public commentCount!: number;
