@@ -7,7 +7,6 @@ import { OfferService } from './offer-service.interface.js';
 import { fillDTO } from '../../helpers/index.js';
 import { OfferRdo } from './rdo/offer.rdo.js';
 import { CreateOfferDto } from './dto/create-offer.dto.js';
-import { StatusCodes } from 'http-status-codes';
 
 
 @injectable()
