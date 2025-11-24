@@ -37,6 +37,10 @@ export class RestApplication {
     this.server.listen(port);
   }
 
+  private async _initMiddleware() {
+    this.server.use(express.json());
+  }
+
   private async _initControllers() {
     this.server.use('/categories', this.offerController.router);
   }
@@ -48,6 +52,10 @@ export class RestApplication {
     this.logger.info('Init database');
     await this._initDb();
     this.logger.info('Init database completed');
+
+    this.logger.info('Init app-level middleware');
+    await this._initMiddleware();
+    this.logger.info('App-level middleware initialization completed');
 
     this.logger.info('Init controllers');
     await this._initControllers();

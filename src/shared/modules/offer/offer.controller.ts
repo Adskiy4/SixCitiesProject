@@ -4,6 +4,11 @@ import { BaseController, HttpMethod } from '../../libs/rest/index.js';
 import { Logger } from '../../libs/logger/index.js';
 import { Component } from '../../types/index.js';
 import { OfferService } from './offer-service.interface.js';
+import { fillDTO } from '../../helpers/index.js';
+import { OfferRdo } from './rdo/offer.rdo.js';
+import { CreateOfferDto } from './dto/create-offer.dto.js';
+import { StatusCodes } from 'http-status-codes';
+
 
 @injectable()
 export class OfferController extends BaseController{
@@ -20,11 +25,16 @@ export class OfferController extends BaseController{
     }
 
     public async index(_req: Request, res: Response): Promise<void> {
-        const categories = await this.offerService.find();
-        this.ok(res, categories);
+        const categories = await this.offerService.findAll();
+        const responseData = fillDTO(OfferRdo, categories);
+        this.ok(res, responseData);
     }
 
-    public create(req: Request, res: Response): void {
-        // Код обработчика
+    public async create(
+        { body }: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
+        res: Response,
+    ): Promise<void> {
+        const result = await this.offerService.create(body);
+        this.created(res, result);
     }
 }
