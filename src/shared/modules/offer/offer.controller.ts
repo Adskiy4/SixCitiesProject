@@ -1,6 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { Request, Response } from 'express';
-import { BaseController, HttpMethod, HttpError, ValidateObjectIdMiddleware } from '../../libs/rest/index.js';
+import {
+  BaseController,
+  HttpError,
+  HttpMethod,
+  ValidateDtoMiddleware,
+  ValidateObjectIdMiddleware,
+} from '../../libs/rest/index.js';
 import { Logger } from '../../libs/logger/index.js';
 import { Component } from '../../types/index.js';
 import { StatusCodes } from 'http-status-codes';
@@ -26,9 +32,15 @@ export class OfferController extends BaseController{
 
         this.addRoute({ path: '/:offerId', method: HttpMethod.Get, handler: this.show as any, middlewares: [new ValidateObjectIdMiddleware('offerId')]});
         this.addRoute({ path: '/', method: HttpMethod.Get, handler: this.index });
-        this.addRoute({ path: '/', method: HttpMethod.Post, handler: this.create });
+        this.addRoute({ path: '/', method: HttpMethod.Post, handler: this.create, middlewares: [new ValidateDtoMiddleware(CreateOfferDto)] });
         this.addRoute({ path: '/:offerId', method: HttpMethod.Delete, handler: this.delete as any, middlewares: [new ValidateObjectIdMiddleware('offerId')]});
-        this.addRoute({ path: '/:offerId', method: HttpMethod.Patch, handler: this.update as any, middlewares: [new ValidateObjectIdMiddleware('offerId')]});
+        this.addRoute({ 
+            path: '/:offerId',
+            method: HttpMethod.Patch,
+            handler: this.update as any,
+            middlewares: [new ValidateObjectIdMiddleware('offerId'),
+                new ValidateDtoMiddleware(UpdateOfferDto),]
+        });
         this.addRoute({ path: '/:offerId/comments', method: HttpMethod.Get, handler: this.getComments as any, middlewares: [new ValidateObjectIdMiddleware('offerId')]});
         this.addRoute({ path: '/bundles/new', method: HttpMethod.Get, handler: this.getNew });
         this.addRoute({ path: '/bundles/discussed', method: HttpMethod.Get, handler: this.getDiscussed });
