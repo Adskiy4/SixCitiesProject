@@ -57,7 +57,7 @@ export class DefaultOfferService implements OfferService {
   }
 
   public async incCommentCount(offerId: string): Promise<void> {
-    this.offerModel
+    await this.offerModel
       .findByIdAndUpdate(offerId, {'$inc': {
         commentCount: 1,
       }}).exec();

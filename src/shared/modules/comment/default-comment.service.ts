@@ -17,8 +17,8 @@ export class DefaultCommentService implements CommentService {
 
   public async create(dto: CreateCommentDto): Promise<DocumentType<CommentEntity>> {
     const comment = await this.commentModel.create(dto);
-    this.offerService.incCommentCount(dto.offerId);
-    this.recalculateRatingByOfferId(dto.offerId);
+    await this.offerService.incCommentCount(dto.offerId);
+    await this.recalculateRatingByOfferId(dto.offerId);
 
     this.logger.info(`New comment added for offer: ${dto.offerId}`);
     return comment.populate('userId');
@@ -40,7 +40,7 @@ export class DefaultCommentService implements CommentService {
 
   public async recalculateRatingByOfferId(offerId: string): Promise<void> {
     const result = await this.commentModel.aggregate([
-      { $match: { offer: { $eq: offerId } } },
+      { $match: { offerId: { $eq: offerId } } },
       {
         $group: {
           _id: null,
