@@ -90,7 +90,7 @@ export class DefaultOfferService implements OfferService {
   public async findDiscussed(count: number): Promise<DocumentType<OfferEntity>[]> {
     return this.offerModel
       .find()
-      .sort({ commentCount: SortType.Down })
+      .sort({ commentsCount: SortType.Down })
       .limit(count)
       .populate(['userId', 'categories'])
       .exec();
