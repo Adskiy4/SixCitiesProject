@@ -28,7 +28,7 @@ export default class CommentController extends BaseController {
     this.addRoute({
       path: '/',
       method: HttpMethod.Post,
-      handler: this.create as any,
+      handler: this.create,
       middlewares: [
         new PrivateRouteMiddleware(),
         new ValidateDtoMiddleware(CreateCommentDto)

@@ -7,6 +7,7 @@ import {
   HttpMethod, UploadFileMiddleware,
   ValidateDtoMiddleware,
   ValidateObjectIdMiddleware,
+  PrivateRouteMiddleware,
 } from '../../libs/rest/index.js';
 import { Logger } from '../../libs/logger/index.js';
 import { Component } from '../../types/index.js';
@@ -17,6 +18,7 @@ import { fillDTO } from '../../helpers/index.js';
 import { UserRdo } from './rdo/user.rdo.js';
 import { LoginUserRequest } from './login-user-request.type.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { LoginUserDto } from './dto/login-user.dto.js';
 import { AuthService } from '../auth/index.js';
 import { LoggedUserRdo } from './rdo/logged-user.rdo.js';
 
@@ -40,13 +42,20 @@ export class UserController extends BaseController {
     });
     this.addRoute({
       path: '/login',
+      method: HttpMethod.Post,
+      handler: this.login,
+      middlewares: [new ValidateDtoMiddleware(LoginUserDto)]
+    });
+    this.addRoute({
+      path: '/login',
       method: HttpMethod.Get,
       handler: this.checkAuthenticate,
+      middlewares: [new PrivateRouteMiddleware()]
     });
     this.addRoute({
       path: '/:userId/avatar',
       method: HttpMethod.Post,
-      handler: this.uploadAvatar as any,
+      handler: this.uploadAvatar,
       middlewares: [
         new ValidateObjectIdMiddleware('userId'),
         new UploadFileMiddleware(this.configService.get('UPLOAD_DIRECTORY'), 'avatar'),
@@ -91,8 +100,15 @@ export class UserController extends BaseController {
     });
   }
 
-  public async checkAuthenticate({ tokenPayload: { email }}: Request, res: Response) {
-    const foundedUser = await this.userService.findByEmail(email);
+  public async checkAuthenticate({ tokenPayload }: Request, res: Response) {
+    if (!tokenPayload) {
+      throw new HttpError(
+        StatusCodes.UNAUTHORIZED,
+        'Unauthorized',
+        'UserController'
+      );
+    }
+    const foundedUser = await this.userService.findByEmail(tokenPayload.email);
 
     if (! foundedUser) {
       throw new HttpError(

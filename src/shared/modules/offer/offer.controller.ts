@@ -32,7 +32,7 @@ export class OfferController extends BaseController{
         this.addRoute({ 
             path: '/:offerId',
             method: HttpMethod.Get, 
-            handler: this.show as any,       
+            handler: this.show,       
             middlewares: [
                 new ValidateObjectIdMiddleware('offerId'),
                 new DocumentExistsMiddleware(this.offerService, 'Offer', 'offerId'),
@@ -51,7 +51,7 @@ export class OfferController extends BaseController{
         this.addRoute({ 
             path: '/:offerId', 
             method: HttpMethod.Delete, 
-            handler: this.delete as any,       
+            handler: this.delete,       
             middlewares: [
                 new PrivateRouteMiddleware(),
                 new ValidateObjectIdMiddleware('offerId'),
@@ -61,7 +61,7 @@ export class OfferController extends BaseController{
         this.addRoute({ 
             path: '/:offerId',
             method: HttpMethod.Patch,
-            handler: this.update as any,
+            handler: this.update,
             middlewares: [
                 new PrivateRouteMiddleware(),
                 new ValidateObjectIdMiddleware('offerId'),
@@ -72,7 +72,7 @@ export class OfferController extends BaseController{
         this.addRoute({       
             path: '/:offerId/comments',
             method: HttpMethod.Get,
-            handler: this.getComments as any,
+            handler: this.getComments,
             middlewares: [
                 new ValidateObjectIdMiddleware('offerId'),
                 new DocumentExistsMiddleware(this.offerService, 'Offer', 'offerId'),
