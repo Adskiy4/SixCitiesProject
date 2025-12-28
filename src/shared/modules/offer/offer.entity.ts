@@ -63,9 +63,6 @@ export class OfferEntity extends defaultClasses.TimeStamps {
   public conveniences: Convenience[];
 
 
-  @prop({default: 0})
-  public commentCount!: number;
-
   @prop({
     ref: () => UserEntity,
     required: true
