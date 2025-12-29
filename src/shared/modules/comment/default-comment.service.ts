@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { CommentService } from './comment-service.interface.js';
 import { Component } from '../../types/index.js';
 import { DocumentType, types } from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 import { CommentEntity } from './comment.entity.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { Logger } from 'pino';
@@ -42,8 +43,9 @@ export class DefaultCommentService implements CommentService {
   }
 
   public async recalculateRatingByOfferId(offerId: string): Promise<void> {
+    const offerObjectId = new Types.ObjectId(offerId);
     const result = await this.commentModel.aggregate([
-      { $match: { offerId: { $eq: offerId } } },
+      { $match: { offerId: { $eq: offerObjectId } } },
       {
         $group: {
           _id: null,

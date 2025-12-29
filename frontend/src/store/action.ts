@@ -153,12 +153,13 @@ export const fetchUserStatus = createAsyncThunk<UserAuth['email'], undefined, { 
 
 export const loginUser = createAsyncThunk<UserAuth['email'], UserAuth, { extra: Extra }>(
   Action.LOGIN_USER,
-  async ({ email, password }, { extra }) => {
+  async ({ email, password }, { extra, dispatch }) => {
     const { api, history } = extra;
     const { data } = await api.post<{ email: string; token: string }>(ApiRoute.Login, { email, password });
     const { token } = data;
 
     Token.save(token);
+    dispatch(fetchFavoriteOffers());
     history.push(AppRoute.Root);
 
     return email;

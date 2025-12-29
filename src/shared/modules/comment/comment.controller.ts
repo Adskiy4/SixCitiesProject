@@ -14,6 +14,7 @@ import { CommentService } from './comment-service.interface.js';
 import { OfferService } from '../offer/index.js';
 import { fillDTO } from '../../helpers/index.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
+import { CommentRdo } from './rdo/comment.rdo.js';
 
 @injectable()
 export default class CommentController extends BaseController {
@@ -56,6 +57,6 @@ export default class CommentController extends BaseController {
     }
 
     const result = await this.commentService.create({ ...body, offerId: offerId, userId: tokenPayload.id });
-    this.created(res, fillDTO(CreateCommentDto, result));
+    this.created(res, fillDTO(CommentRdo, result));
   }
 }

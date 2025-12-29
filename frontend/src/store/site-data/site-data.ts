@@ -2,7 +2,16 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import type { SiteData } from '../../types/state';
 import { StoreSlice, SubmitStatus } from '../../const';
-import { fetchOffers, fetchOffer, fetchPremiumOffers, fetchComments, postComment, postFavorite, fetchFavoriteOffers } from '../action';
+import {
+  fetchOffers,
+  fetchOffer,
+  fetchPremiumOffers,
+  fetchComments,
+  postComment,
+  postFavorite,
+  fetchFavoriteOffers,
+  logoutUser,
+} from '../action';
 
 const initialState: SiteData = {
   offers: [],
@@ -38,9 +47,37 @@ export const siteData = createSlice({
       .addCase(fetchFavoriteOffers.fulfilled, (state, action) => {
         state.favoriteOffers = action.payload;
         state.isFavoriteOffersLoading = false;
+
+        const favoriteIds = new Set(action.payload.map((offer) => offer.id));
+        state.offers = state.offers.map((offer) => ({
+          ...offer,
+          isFavorite: favoriteIds.has(offer.id),
+        }));
+        state.premiumOffers = state.premiumOffers.map((offer) => ({
+          ...offer,
+          isFavorite: favoriteIds.has(offer.id),
+        }));
+
+        if (state.offer) {
+          state.offer = { ...state.offer, isFavorite: favoriteIds.has(state.offer.id) };
+        }
       })
       .addCase(fetchFavoriteOffers.rejected, (state) => {
+        state.favoriteOffers = [];
         state.isFavoriteOffersLoading = false;
+
+        state.offers = state.offers.map((offer) => ({
+          ...offer,
+          isFavorite: false,
+        }));
+        state.premiumOffers = state.premiumOffers.map((offer) => ({
+          ...offer,
+          isFavorite: false,
+        }));
+
+        if (state.offer) {
+          state.offer = { ...state.offer, isFavorite: false };
+        }
       })
       .addCase(fetchOffer.pending, (state) => {
         state.isOfferLoading = true;
@@ -87,6 +124,15 @@ export const siteData = createSlice({
           }
         } else {
           state.favoriteOffers = state.favoriteOffers.filter((favoriteOffer) => favoriteOffer.id !== id);
+        }
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.favoriteOffers = [];
+        state.isFavoriteOffersLoading = false;
+        state.offers = state.offers.map((offer) => ({ ...offer, isFavorite: false }));
+        state.premiumOffers = state.premiumOffers.map((offer) => ({ ...offer, isFavorite: false }));
+        if (state.offer) {
+          state.offer = { ...state.offer, isFavorite: false };
         }
       });
   }
