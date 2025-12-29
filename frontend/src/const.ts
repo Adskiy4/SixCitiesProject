@@ -25,6 +25,7 @@ export const MAX_PERCENT_STARS_WIDTH = 100;
 export const URL_MARKER_DEFAULT = 'img/pin.svg';
 export const URL_MARKER_CURRENT = 'img/pin-active.svg';
 export const ZOOM = 13;
+export const DEFAULT_IMAGE_URL = 'img/apartment-01.jpg';
 
 export const MAX_COMMENTS = 10;
 export const MIN_COMMENT_LENGTH = 50;
@@ -43,14 +44,13 @@ export enum AppRoute {
 }
 
 export enum ApiRoute {
-  Offers = '/hotels',
-  Login = '/login',
-  Logout = '/logout',
-  Register = '/register',
+  Offers = '/offers',
+  Users = '/users',
+  Login = '/users/login',
+  Logout = '/users/logout',
+  Register = '/users/register',
   Avatar = '/avatar',
-  Comments = '/comments',
-  Favorite = '/favorite',
-  Premium = '/premium',
+  Premium = '/offers/premium',
 }
 
 export enum AuthorizationStatus {
@@ -64,6 +64,7 @@ export enum Sorting {
   PriceIncrease = 'Price: low to high',
   PriceDecrease = 'Price: high to low',
   TopRated = 'Top rated first',
+  PremiumOnly = 'Premium only',
 }
 
 export enum StoreSlice {
@@ -91,6 +92,7 @@ export const Comparator: {
   PriceIncrease: (a, b) => a.price - b.price,
   PriceDecrease: (a, b) => b.price - a.price,
   TopRated: (a, b) => b.rating - a.rating,
+  PremiumOnly: () => 0,
 };
 
 export const CityLocation: { [key in CityName]: Location } = {

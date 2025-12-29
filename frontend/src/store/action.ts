@@ -2,9 +2,18 @@ import type { History } from 'history';
 import type { AxiosInstance, AxiosError } from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
-import type { UserAuth, User, Offer, Comment, CommentAuth, FavoriteAuth, UserRegister, NewOffer } from '../types/types';
+import type { UserAuth, Offer, Comment, CommentAuth, FavoriteAuth, UserRegister, NewOffer } from '../types/types';
 import { ApiRoute, AppRoute, HttpCode } from '../const';
-import { Token } from '../utils';
+import {
+  adaptOffer,
+  adaptOffers,
+  adaptComment,
+  adaptComments,
+  adaptNewOfferToCreatePayload,
+  adaptOfferToUpdatePayload,
+} from '../adapters';
+import type { BackendOffer, BackendComment } from '../adapters';
+import { Token, getTokenPayload, decodeTokenPayload } from '../utils';
 
 type Extra = {
   api: AxiosInstance;
@@ -32,18 +41,24 @@ export const fetchOffers = createAsyncThunk<Offer[], undefined, { extra: Extra }
   Action.FETCH_OFFERS,
   async (_, { extra }) => {
     const { api } = extra;
-    const { data } = await api.get<Offer[]>(ApiRoute.Offers);
+    const { data } = await api.get<BackendOffer[]>(ApiRoute.Offers);
 
-    return data;
+    return adaptOffers(data);
   });
 
 export const fetchFavoriteOffers = createAsyncThunk<Offer[], undefined, { extra: Extra }>(
   Action.FETCH_FAVORITE_OFFERS,
   async (_, { extra }) => {
     const { api } = extra;
-    const { data } = await api.get<Offer[]>(ApiRoute.Favorite);
+    const tokenPayload = getTokenPayload();
 
-    return data;
+    if (!tokenPayload?.id) {
+      return [];
+    }
+
+    const { data } = await api.get<BackendOffer[]>(`${ApiRoute.Users}/${tokenPayload.id}/favorites`);
+
+    return adaptOffers(data);
   });
 
 export const fetchOffer = createAsyncThunk<Offer, Offer['id'], { extra: Extra }>(
@@ -52,9 +67,9 @@ export const fetchOffer = createAsyncThunk<Offer, Offer['id'], { extra: Extra }>
     const { api, history } = extra;
 
     try {
-      const { data } = await api.get<Offer>(`${ApiRoute.Offers}/${id}`);
+      const { data } = await api.get<BackendOffer>(`${ApiRoute.Offers}/${id}`);
 
-      return data;
+      return adaptOffer(data);
     } catch (error) {
       const axiosError = error as AxiosError;
 
@@ -70,16 +85,24 @@ export const postOffer = createAsyncThunk<void, NewOffer, { extra: Extra }>(
   Action.POST_OFFER,
   async (newOffer, { extra }) => {
     const { api, history } = extra;
-    const { data } = await api.post<Offer>(ApiRoute.Offers, newOffer);
-    history.push(`${AppRoute.Property}/${data.id}`);
+    const payload = adaptNewOfferToCreatePayload(newOffer);
+    const { data } = await api.post<BackendOffer>(ApiRoute.Offers, payload);
+    const createdOffer = adaptOffer(data);
+
+    if (createdOffer.id) {
+      history.push(`${AppRoute.Property}/${createdOffer.id}`);
+    } else {
+      history.push(AppRoute.Root);
+    }
   });
 
 export const editOffer = createAsyncThunk<void, Offer, { extra: Extra }>(
   Action.EDIT_OFFER,
   async (offer, { extra }) => {
     const { api, history } = extra;
-    const { data } = await api.patch<Offer>(`${ApiRoute.Offers}/${offer.id}`, offer);
-    history.push(`${AppRoute.Property}/${data.id}`);
+    const payload = adaptOfferToUpdatePayload(offer);
+    await api.patch(`${ApiRoute.Offers}/${offer.id}`, payload);
+    history.push(`${AppRoute.Property}/${offer.id}`);
   });
 
 export const deleteOffer = createAsyncThunk<void, string, { extra: Extra }>(
@@ -94,18 +117,18 @@ export const fetchPremiumOffers = createAsyncThunk<Offer[], string, { extra: Ext
   Action.FETCH_PREMIUM_OFFERS,
   async (cityName, { extra }) => {
     const { api } = extra;
-    const { data } = await api.get<Offer[]>(`${ApiRoute.Premium}?city=${cityName}`);
+    const { data } = await api.get<BackendOffer[]>(`${ApiRoute.Premium}/${cityName}`);
 
-    return data;
+    return adaptOffers(data);
   });
 
 export const fetchComments = createAsyncThunk<Comment[], Offer['id'], { extra: Extra }>(
   Action.FETCH_COMMENTS,
   async (id, { extra }) => {
     const { api } = extra;
-    const { data } = await api.get<Comment[]>(`${ApiRoute.Comments}/${id}`);
+    const { data } = await api.get<BackendComment[]>(`${ApiRoute.Offers}/${id}/comments`);
 
-    return data;
+    return adaptComments(data);
   });
 
 export const fetchUserStatus = createAsyncThunk<UserAuth['email'], undefined, { extra: Extra }>(
@@ -114,7 +137,7 @@ export const fetchUserStatus = createAsyncThunk<UserAuth['email'], undefined, { 
     const { api } = extra;
 
     try {
-      const { data } = await api.get<User>(ApiRoute.Login);
+      const { data } = await api.get<{ email: string }>(ApiRoute.Login);
 
       return data.email;
     } catch (error) {
@@ -132,7 +155,7 @@ export const loginUser = createAsyncThunk<UserAuth['email'], UserAuth, { extra: 
   Action.LOGIN_USER,
   async ({ email, password }, { extra }) => {
     const { api, history } = extra;
-    const { data } = await api.post<User & { token: string }>(ApiRoute.Login, { email, password });
+    const { data } = await api.post<{ email: string; token: string }>(ApiRoute.Login, { email, password });
     const { token } = data;
 
     Token.save(token);
@@ -154,36 +177,63 @@ export const registerUser = createAsyncThunk<void, UserRegister, { extra: Extra 
   Action.REGISTER_USER,
   async ({ email, password, name, avatar, isPro }, { extra }) => {
     const { api, history } = extra;
-    const { data } = await api.post<{id: string }>(ApiRoute.Register, { email, password, name, isPro });
+    const { data } = await api.post<{ id?: string }>(ApiRoute.Register, {
+      email,
+      password,
+      firstname: name,
+      type: isPro ? 'pro' : 'standard',
+      avatarPath: '',
+    });
+
+    let userId = data?.id ?? '';
+
     if (avatar) {
-      const payload = new FormData();
-      payload.append('avatar', avatar);
-      await api.post(`/${data.id}${ApiRoute.Avatar}`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      if (!userId) {
+        const loginResponse = await api.post<{ token: string }>(ApiRoute.Login, { email, password });
+        const tokenPayload = decodeTokenPayload(loginResponse.data.token);
+        userId = tokenPayload?.id ?? '';
+      }
+
+      if (userId) {
+        const payload = new FormData();
+        payload.append('avatar', avatar);
+        await api.post(`${ApiRoute.Users}/${userId}${ApiRoute.Avatar}`, payload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
     }
     history.push(AppRoute.Login);
   });
 
 
-export const postComment = createAsyncThunk<Comment[], CommentAuth, { extra: Extra }>(
+export const postComment = createAsyncThunk<Comment, CommentAuth, { extra: Extra }>(
   Action.POST_COMMENT,
   async ({ id, comment, rating }, { extra }) => {
     const { api } = extra;
-    const { data } = await api.post<Comment[]>(`${ApiRoute.Comments}/${id}`, { comment, rating });
+    const { data } = await api.post<BackendComment>(`${ApiRoute.Offers}/${id}/comments`, { text: comment, rating });
 
-    return data;
+    return adaptComment(data);
   });
 
-export const postFavorite = createAsyncThunk<Offer, FavoriteAuth, { extra: Extra }>(
+export const postFavorite = createAsyncThunk<FavoriteAuth, FavoriteAuth, { extra: Extra }>(
   Action.POST_FAVORITE,
   async ({ id, status }, { extra }) => {
     const { api, history } = extra;
+    const tokenPayload = getTokenPayload();
+
+    if (!tokenPayload?.id) {
+      history.push(AppRoute.Login);
+      return Promise.reject(new Error('Unauthorized'));
+    }
 
     try {
-      const { data } = await api.post<Offer>(`${ApiRoute.Favorite}/${id}/${status}`);
+      if (status === 1) {
+        await api.post(`${ApiRoute.Users}/${tokenPayload.id}/favorites`, { offerId: id });
+      } else {
+        await api.delete(`${ApiRoute.Users}/${tokenPayload.id}/favorites/${id}`);
+      }
 
-      return data;
+      return { id, status };
     } catch (error) {
       const axiosError = error as AxiosError;
 
@@ -194,4 +244,3 @@ export const postFavorite = createAsyncThunk<Offer, FavoriteAuth, { extra: Extra
       return Promise.reject(error);
     }
   });
-

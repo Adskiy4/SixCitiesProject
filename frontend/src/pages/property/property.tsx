@@ -25,7 +25,7 @@ import {
 } from '../../store/site-data/selectors';
 import { getUser } from '../../store/user-process/selectors';
 import Bookmark from '../../components/bookmark/bookmark';
-import { AppRoute } from '../../const';
+import { AppRoute, DEFAULT_IMAGE_URL } from '../../const';
 
 const Property = (): JSX.Element | null => {
   const params = useParams();
@@ -102,7 +102,15 @@ const Property = (): JSX.Element | null => {
             <div className="property__gallery">
               {images.map((image) => (
                 <div key={image} className="property__image-wrapper">
-                  <img className="property__image" src={image} alt="Studio" />
+                  <img
+                    className="property__image"
+                    src={image}
+                    alt="Studio"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = DEFAULT_IMAGE_URL;
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -185,6 +193,10 @@ const Property = (): JSX.Element | null => {
                       width={74}
                       height={74}
                       alt={host.name}
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = DEFAULT_IMAGE_URL;
+                      }}
                     />
                   </div>
                   <span className="property__user-name">{host.name}</span>

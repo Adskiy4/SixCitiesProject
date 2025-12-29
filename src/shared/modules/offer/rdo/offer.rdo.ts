@@ -1,8 +1,12 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Type, Transform } from 'class-transformer';
 import { HousingType, CityName, Convenience, Location } from '../../../types/index.js';
 import { UserRdo } from '../../user/rdo/user.rdo.js';
 
 export class OfferRdo {
+  @Expose()
+  @Transform(({ obj }) => obj._id?.toString(), { toClassOnly: true })
+  public id!: string;
+
   @Expose()
   public title!: string;
 

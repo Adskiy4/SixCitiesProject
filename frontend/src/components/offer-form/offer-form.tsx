@@ -44,6 +44,8 @@ const getCity = (cityName: FormDataEntryValue | null): City => {
   return { name: CITIES[0], location: CityLocation[CITIES[0]] };
 };
 
+type TypeOption = { value: typeof TYPES[number]; label: string };
+
 type OfferFormProps<T> = {
   offer: T;
   onSubmit: (offerData: T) => void;
@@ -68,6 +70,12 @@ const OfferForm = <T extends Offer | NewOffer>({
   } = offer;
   const [chosenLocation, setChosenLocation] = useState(location);
   const [chosenCity, setChosenCity] = useState(city);
+  const [chosenType, setChosenType] = useState(type);
+
+  const typeOptions: TypeOption[] = TYPES.map((typeItem) => ({
+    value: typeItem,
+    label: capitalize(typeItem),
+  }));
 
   const handleCityChange = (value: keyof typeof CityLocation) => {
     setChosenCity(getCity(value));
@@ -85,14 +93,17 @@ const OfferForm = <T extends Offer | NewOffer>({
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const previewImageValue = formData.get(FormFieldName.previewImage);
+    const previewImageValueString =
+      typeof previewImageValue === 'string' ? previewImageValue : previewImage;
     const data = {
       ...offer,
       title: formData.get(FormFieldName.title),
       description: formData.get(FormFieldName.description),
-      city: getCity(formData.get(FormFieldName.cityName)),
-      previewImage: formData.get(FormFieldName.previewImage),
+      city: chosenCity ?? getCity(formData.get(FormFieldName.cityName)),
+      previewImage: previewImageValueString,
       isPremium: Boolean(formData.get(FormFieldName.isPremium)),
-      type: formData.get(FormFieldName.type),
+      type: chosenType,
       bedrooms: Number(formData.get(FormFieldName.bedrooms)),
       maxAdults: Number(formData.get(FormFieldName.maxAdults)),
       price: Number(formData.get(FormFieldName.price)),
@@ -174,11 +185,13 @@ const OfferForm = <T extends Offer | NewOffer>({
             classNamePrefix="react-select"
             name={FormFieldName.type}
             id="type"
-            defaultValue={{ value: type, label: capitalize(type) }}
-            options={TYPES.map((typeItem) => ({
-              value: typeItem,
-              label: capitalize(typeItem),
-            }))}
+            value={{ value: chosenType, label: capitalize(chosenType) }}
+            options={typeOptions}
+            onChange={(option) => {
+              if (option) {
+                setChosenType(option.value);
+              }
+            }}
           />
         </div>
         <div className="form__input-wrapper">

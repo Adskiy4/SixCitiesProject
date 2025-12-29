@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { Offer } from '../../types/types';
-import { AppRoute } from '../../const';
+import { AppRoute, DEFAULT_IMAGE_URL } from '../../const';
 import { capitalize, getStarsWidth } from '../../utils';
 import Bookmark from '../bookmark/bookmark';
 
@@ -50,6 +50,10 @@ const Card = ({
             width={isMini ? 150 : 260}
             height={isMini ? 110 : 200}
             alt={title}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = DEFAULT_IMAGE_URL;
+            }}
           />
         </Link>
       </div>

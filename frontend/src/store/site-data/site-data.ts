@@ -62,24 +62,31 @@ export const siteData = createSlice({
         state.commentStatus = SubmitStatus.Pending;
       })
       .addCase(postComment.fulfilled, (state, action) => {
-        state.comments = action.payload;
+        state.comments = [action.payload, ...state.comments];
         state.commentStatus = SubmitStatus.Fullfilled;
       })
       .addCase(postComment.rejected, (state) => {
         state.commentStatus = SubmitStatus.Rejected;
       })
       .addCase(postFavorite.fulfilled, (state, action) => {
-        const updatedOffer = action.payload;
-        state.offers = state.offers.map((offer) => offer.id === updatedOffer.id ? updatedOffer : offer);
+        const { id, status } = action.payload;
+        const isFavorite = status === 1;
 
-        if (state.offer && state.offer.id === updatedOffer.id) {
-          state.offer = updatedOffer;
+        state.offers = state.offers.map((offer) =>
+          offer.id === id ? { ...offer, isFavorite } : offer
+        );
+
+        if (state.offer && state.offer.id === id) {
+          state.offer = { ...state.offer, isFavorite };
         }
 
-        if (updatedOffer.isFavorite) {
-          state.favoriteOffers = state.favoriteOffers.concat(updatedOffer);
+        if (isFavorite) {
+          const offerToAdd = state.offers.find((offer) => offer.id === id);
+          if (offerToAdd && !state.favoriteOffers.some((offer) => offer.id === id)) {
+            state.favoriteOffers = state.favoriteOffers.concat(offerToAdd);
+          }
         } else {
-          state.favoriteOffers = state.favoriteOffers.filter((favoriteOffer) => favoriteOffer.id !== updatedOffer.id);
+          state.favoriteOffers = state.favoriteOffers.filter((favoriteOffer) => favoriteOffer.id !== id);
         }
       });
   }

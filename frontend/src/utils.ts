@@ -29,3 +29,45 @@ export class Token {
     localStorage.removeItem(this._name);
   }
 }
+
+export type TokenPayload = {
+  id: string;
+  email: string;
+  firstname: string;
+  iat?: number;
+  exp?: number;
+};
+
+const decodeBase64Url = (value: string): string => {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = normalized.length % 4;
+  const padded = padding ? normalized + '='.repeat(4 - padding) : normalized;
+  return atob(padded);
+};
+
+export const decodeTokenPayload = (token: string): TokenPayload | null => {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(parts[1])) as TokenPayload;
+    if (payload && typeof payload.id === 'string') {
+      return payload;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+export const getTokenPayload = (): TokenPayload | null => {
+  const token = Token.get();
+  if (!token) {
+    return null;
+  }
+
+  return decodeTokenPayload(token);
+};

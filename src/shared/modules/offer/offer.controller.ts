@@ -9,7 +9,7 @@ import {
 } from '../../libs/rest/index.js';
 import { StatusCodes } from 'http-status-codes';
 import { Logger } from '../../libs/logger/index.js';
-import { Component, CityName, isCityName } from '../../types/index.js';
+import { Component, isCityName } from '../../types/index.js';
 import { OfferService } from './offer-service.interface.js';
 import { fillDTO } from '../../helpers/index.js';
 import { UpdateOfferDto } from './dto/update-offer.dto.js';
@@ -100,6 +100,16 @@ export class OfferController extends BaseController{
         });
     }
 
+    private getOfferOwnerId(offer: { userId: unknown }): string | undefined {
+        const rawUserId = offer.userId as { id?: string; _id?: { toString: () => string } } | string;
+
+        if (typeof rawUserId === 'string') {
+            return rawUserId;
+        }
+
+        return rawUserId?.id ?? rawUserId?._id?.toString();
+    }
+
     public async index(req: Request, res: Response): Promise<void> {
         const limit = req.query.limit ? Number.parseInt(String(req.query.limit), 10) : undefined;
         const offers = await this.offerService.findAll(limit);
@@ -132,7 +142,8 @@ export class OfferController extends BaseController{
             );
         }
 
-        if (String(offer.userId) !== tokenPayload.id) {
+        const ownerId = this.getOfferOwnerId(offer);
+        if (!ownerId || ownerId !== tokenPayload.id) {
             throw new HttpError(
                 StatusCodes.FORBIDDEN,
                 'You can only delete your own offers',
@@ -160,7 +171,8 @@ export class OfferController extends BaseController{
             );
         }
 
-        if (String(offer.userId) !== tokenPayload.id) {
+        const ownerId = this.getOfferOwnerId(offer);
+        if (!ownerId || ownerId !== tokenPayload.id) {
             throw new HttpError(
                 StatusCodes.FORBIDDEN,
                 'You can only update your own offers',
